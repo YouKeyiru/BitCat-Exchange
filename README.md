@@ -1,10 +1,12 @@
 ###API
+```
 cp .env.example .env <br/>
 composer install <br/>
 php artisan storage:link <br/>
 chmod -R 755 storage/ <br/>
 php artisan key:generate <br/>
 php artisan jwt:secret <br/>
+```
 
 ###Init
 ```
