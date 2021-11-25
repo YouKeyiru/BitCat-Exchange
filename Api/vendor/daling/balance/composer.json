@@ -1,0 +1,23 @@
+{
+    "name": "daling/balance",
+    "description": "Recharge to account package",
+    "authors": [
+        {
+            "name": "lhb",
+            "email": "bbbyer@163.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Daling\\Balance\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Daling\\Balance\\ServiceProvider"
+            ]
+        }
+    }
+}

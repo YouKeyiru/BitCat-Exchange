@@ -1,0 +1,856 @@
+
+
+
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <title>kline</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+        * {
+            margin: 0px;
+            padding: 0px;
+        } 
+
+        #loading {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            left: 50%;
+            margin-left: -100px;
+            top: 50%;
+            margin-top: -100px;
+            z-index: 99999999;
+            background: url('./img/timg.839fddf.gif') center center no-repeat;
+            background-size: 30% 30%;
+            display: none;
+        }
+    </style>
+</head>
+
+<body style="height: 100%">
+    <!-- <div class="hello"> -->
+        <div id="chart_container" class="f-fill" style="height:100%;"></div>
+        <span id="loading"></span>
+    <!-- </div> -->
+    <script src="./lib/jquery.js"></script>
+    <script type="text/javascript" src='./static/custom_scripts/chart_main/charting_library.min.js'></script>
+
+    <script type="text/javascript">
+        var currency1 = 'USDT', currency2 = 'BTC', saved_chart = null, chart = null, feed = null, timer = 30000, pushtimer = null, last_price = null, bars = [], chart = null, MainData = null, CodeName = '', timers = null, status = 1, timer_kline = null;
+        var loading = document.getElementById('loading');
+        var dataurl = "http://121.36.215.181:10002/api/kline/index?pageSize=1000&goodsType=";
+        var wsurl = 'ws://121.36.215.181:10002/ws';
+        
+        
+
+
+        function GetQueryString(name) { //截取url
+            var reg = new RegExp("(^|&|)" + name + "=([^&?]*)(&|$|)", "i");
+            var r = window.location.search.substr(1).match(reg);  //获取url中"?"符后的字符串并正则匹配
+        // console.log(reg,r)
+            var context = "";
+            if (r != null)
+                context = r[2];
+            reg = null;
+            r = null;
+            return context == null || context == "" || context == "undefined" ? "" : context;
+        };
+        CodeName = GetQueryString('code');
+        timers = GetQueryString('timers');
+        last_price = GetQueryString('last_price');
+
+        // console.log(last_price);
+
+        // num = GetQueryString('num');
+        num = 3;
+        // console.log(GetQueryString('num'))
+        var label = GetQueryString('label')
+
+        // if (timers == '4h') {
+        //     getChartData(dataurl + 'minute240&code=' + CodeName);
+        // }
+        if (timers == '1') {
+            getChartData(dataurl + 'minute&code=' + CodeName);
+        } if (timers != '1' && timers != '1D' && timers != '1W' && timers != '1M') {
+            getChartData(dataurl + 'minute' + timers + '&code=' + CodeName);
+        }
+        if (timers == '1D') {
+            getChartData(dataurl + 'day&code=' + CodeName);
+        }
+        if (timers == '1W') {
+            getChartData(dataurl + 'week&code=' + CodeName);
+        }
+        if (timers == '1M') {
+            getChartData(dataurl + 'month&code=' + CodeName);
+        }
+        
+        let la = localStorage.getItem("lang");
+        if (la) {
+            if (la == "zh") {
+                local = "zh";
+            } else if (la == "tw") {
+                local = "zh_TW";
+            } else if (la == "ja") {
+                local = "ja";
+            } else if (la == "ko") {
+                local = "ko";
+            } else {
+                    local = "en";
+            }
+        } else {
+                local = "en";
+        }
+
+                // //白天黑夜切换
+// if(getCookie("changeBg") == 'night' || !getCookie("changeBg")) {
+//      localStorage.clear();
+//      var _bgColor = {
+//          mainBg: '#0B0A0B', //主要背景颜色
+//          asideBg: '#282829', //工具边框颜色
+//          hengline: '#344568', //横线
+//          shuline: '#344568', //竖线
+//          backgroundColor:'#181B2A',
+//          foregroundColor:'#181B2A',              
+//      }
+//  } else {
+//      localStorage.clear();
+//      var _bgColor = {                
+//          mainBg: '#fff', //主要背景颜色
+//          asideBg: '#fff', //工具边框颜色
+//          hengline: '#eee', //横线
+//          shuline: '#eee', //竖线
+//          backgroundColor:'#fff',
+//          foregroundColor:'#fff',     
+//      }
+//  };
+
+ var _bgColor = {
+         mainBg: '#0B0A0B', //主要背景颜色
+         asideBg: '#161C2B', //工具边框颜色
+         hengline: '#344568', //横线
+         shuline: '#344568', //竖线
+         backgroundColor:'#181B2A',
+         foregroundColor:'#181B2A',              
+     }
+
+
+        var feed = createFeed();
+        TradingView.onready(function (configurationData) {
+            loading.style.display = 'block';
+            chart = window.tvWidget = new TradingView.widget({
+                fullscreen: false,
+                autosize: true,
+                symbol: CodeName,
+                container_id: "chart_container",
+                datafeed: feed,
+                library_path: "static/custom_scripts/chart_main/",
+                locale: local,
+                timezone: 'Asia/Shanghai', //todo: ustawianie timezone'a po strefie usera
+                charts_storage_api_version: "1.1",
+                client_id: 'tradingview.com',
+                user_id: 'public_user_id',
+                minmov: 1,
+                pricecale: 10000,
+                minmove2: 0,
+                loading_screen: {
+                    backgroundColor: _bgColor.backgroundColor,
+                    foregroundColor: _bgColor.foregroundColor,
+                }, //todo:do it  加载背景色
+                // debug: true,
+                //loading_screen:{ backgroundColor: "#000000",foregroundColor: "#000000", }//todo:do it
+                interval: timers,
+                // timeframe:'',//todo: na koncu
+                toolbar_bg: _bgColor.asideBg,//工具栏背景颜色
+                // saved_data: savedData, 
+                allow_symbol_change: true,
+                time_frames: [
+                    { text: "1y", resolution: "1W" },
+                    { text: "6m", resolution: "3D" },
+                    { text: "3m", resolution: "1D" },
+                    { text: "1m", resolution: "1D" },
+                    { text: "1w", resolution: "30" },
+                    { text: "3d", resolution: "30" },
+                    { text: "1d", resolution: "30" },
+                    { text: "6h", resolution: "15" },
+                    { text: "1h", resolution: "1" }],
+                drawings_access: {
+                    type: 'black',
+                    // tools: [{name: "Regression Trend"}]//todo: moje
+                    tools: [{ name: "Trend Line", grayed: true }, { name: "Trend Angle", grayed: true }] //todo: bb
+                },
+                disabled_features: [
+                    "header_symbol_search",
+                    "header_interval_dialog_button",
+                    "show_interval_dialog_on_key_press",
+                    "symbol_search_hot_key",
+                    "study_dialog_search_control",
+                    "display_market_status",
+                    "header_compare",
+                    "symbol_info",
+                    "border_around_the_chart",
+                    "main_series_scale_menu",
+                    "star_some_intervals_by_default",
+                    "datasource_copypaste",
+                    "right_bar_stays_on_scroll",
+                    "context_menus",
+                    "go_to_date",
+                    "compare_symbol",
+                    "border_around_the_chart",
+                    "timezone_menu",
+                    // "legend_context_menu",
+                    "header_resolutions", //todo: przetestowac
+                    // "control_bar", //todo: przetestowac
+                    //"edit_buttons_in_legend",//todo: przetestowac
+                    "remove_library_container_border",
+                    "volume_force_overlay",
+                    // "dont_show_boolean_study_arguments",
+                ],
+                enabled_features: [
+                    "use_localstorage_for_settings",
+                    "remove_library_container_border",
+                    "save_chart_properties_to_local_storage",
+                    "side_toolbar_in_fullscreen_mode",
+                    "hide_last_na_study_output",
+                    "constraint_dialogs_movement", //todo: nie do końca jestem pewien
+                    "legend_context_menu",
+                    "dont_show_boolean_study_arguments",
+                    "edit_buttons_in_legend",
+                    "control_bar"
+                ],
+                studies_overrides: {
+                    "volume.volume.color.0": "#03c087",
+                    "volume.volume.color.1": "#ff5755",
+                    "volume.volume.transparency": 75,
+                },
+                overrides: {
+                    "symbolWatermarkProperties.color": "rgba(0,0,0, 0)",
+                    "paneProperties.background": _bgColor.mainBg, //背景颜色
+                    "paneProperties.vertGridProperties.color": _bgColor.hengline, //横线
+                    "paneProperties.horzGridProperties.color": _bgColor.shuline, //竖线
+                    "paneProperties.crossHairProperties.color": "#58637a", //这个不知道是什么颜色
+                    "paneProperties.crossHairProperties.style": 1,
+                    "mainSeriesProperties.style": 9,
+                    "mainSeriesProperties.showCountdown": false,
+                    "scalesProperties.showSeriesLastValue": true,
+                    "mainSeriesProperties.visible": false,
+                    "mainSeriesProperties.showPriceLine": true,
+                    "mainSeriesProperties.priceLineWidth": 1,
+                    "mainSeriesProperties.lockScale": false,
+                    "mainSeriesProperties.minTick": "default",
+                    "mainSeriesProperties.extendedHours": false,
+                    "volumePaneSize": "medium",
+                    editorFontsList: ["Lato", "Arial", "Verdana", "Courier New", "Times New Roman"],
+                    "paneProperties.topMargin": 5,
+                    "paneProperties.bottomMargin": 5,
+                    "paneProperties.leftAxisProperties.autoScale": true,
+                    "paneProperties.leftAxisProperties.autoScaleDisabled": false,
+                    "paneProperties.leftAxisProperties.percentage": false,
+                    "paneProperties.leftAxisProperties.percentageDisabled": false,
+                    "paneProperties.leftAxisProperties.log": false,
+                    "paneProperties.leftAxisProperties.logDisabled": false,
+                    "paneProperties.leftAxisProperties.alignLabels": true,
+                    "paneProperties.legendProperties.showStudyArguments": false,
+                    "paneProperties.legendProperties.showStudyTitles": true,
+                    "paneProperties.legendProperties.showStudyValues": true,
+                    "paneProperties.legendProperties.showSeriesTitle": true,
+                    "paneProperties.legendProperties.showSeriesOHLC": true,
+                    "scalesProperties.showLeftScale": false,
+                    "scalesProperties.showRightScale": true,
+                    "scalesProperties.backgroundColor": "#1b1b40",
+                    "scalesProperties.lineColor": "#46587b",
+                    "scalesProperties.textColor": "#8f98ad",
+                    "scalesProperties.scaleSeriesOnly": false,
+                    "mainSeriesProperties.priceAxisProperties.autoScale": true,
+                    "mainSeriesProperties.priceAxisProperties.autoScaleDisabled": false,
+                    "mainSeriesProperties.priceAxisProperties.percentage": false,
+                    "mainSeriesProperties.priceAxisProperties.percentageDisabled": false,
+                    "mainSeriesProperties.priceAxisProperties.log": false,
+                    "mainSeriesProperties.priceAxisProperties.logDisabled": false,
+                    "mainSeriesProperties.candleStyle.upColor": "#03c087",
+                    "mainSeriesProperties.candleStyle.downColor": "#ff5755",
+                    "mainSeriesProperties.candleStyle.drawWick": true,
+                    "mainSeriesProperties.candleStyle.drawBorder": true,
+                    "mainSeriesProperties.candleStyle.borderColor": "#ff5755",
+                    "mainSeriesProperties.candleStyle.borderUpColor": "#03c087",
+                    "mainSeriesProperties.candleStyle.borderDownColor": "#ff5755",
+                    "mainSeriesProperties.candleStyle.wickColor": "#737375",
+                    "mainSeriesProperties.candleStyle.wickUpColor": "#03c087",
+                    "mainSeriesProperties.candleStyle.wickDownColor": "#ff5755",
+                    "mainSeriesProperties.candleStyle.barColorsOnPrevClose": false,
+                    "mainSeriesProperties.hollowCandleStyle.upColor": "#ff5755",
+                    "mainSeriesProperties.hollowCandleStyle.downColor": "#03c087",
+                    "mainSeriesProperties.hollowCandleStyle.drawWick": true,
+                    "mainSeriesProperties.hollowCandleStyle.drawBorder": true,
+                    "mainSeriesProperties.hollowCandleStyle.borderColor": "#ff5755",
+                    "mainSeriesProperties.hollowCandleStyle.borderUpColor": "#ff5755",
+                    "mainSeriesProperties.hollowCandleStyle.borderDownColor": "#03c087",
+                    "mainSeriesProperties.hollowCandleStyle.wickColor": "#737375",
+                    "mainSeriesProperties.hollowCandleStyle.wickUpColor": "#ff5755",
+                    "mainSeriesProperties.hollowCandleStyle.wickDownColor": "#03c087",
+                    "mainSeriesProperties.haStyle.upColor": "#ff5755",
+                    "mainSeriesProperties.haStyle.downColor": "#03c087",
+                    "mainSeriesProperties.haStyle.drawWick": true,
+                    "mainSeriesProperties.haStyle.drawBorder": true,
+                    "mainSeriesProperties.haStyle.borderColor": "#ff5755",
+                    "mainSeriesProperties.haStyle.borderUpColor": "#ff5755",
+                    "mainSeriesProperties.haStyle.borderDownColor": "#03c087",
+                    "mainSeriesProperties.haStyle.wickColor": "#737375",
+                    "mainSeriesProperties.haStyle.wickUpColor": "#ff5755",
+                    "mainSeriesProperties.haStyle.wickDownColor": "#03c087",
+                    "mainSeriesProperties.haStyle.barColorsOnPrevClose": false,
+                    "mainSeriesProperties.barStyle.upColor": "#ff5755",
+                    "mainSeriesProperties.barStyle.downColor": "#03c087",
+                    "mainSeriesProperties.barStyle.barColorsOnPrevClose": false,
+                    "mainSeriesProperties.barStyle.dontDrawOpen": false,
+                    "mainSeriesProperties.lineStyle.color": "#0cbef3",
+                    "mainSeriesProperties.lineStyle.linestyle": 0,
+                    "mainSeriesProperties.lineStyle.linewidth": 1,
+                    "mainSeriesProperties.lineStyle.priceSource": "close",
+                    "mainSeriesProperties.areaStyle.color1": "#0cbef3",
+                    "mainSeriesProperties.areaStyle.color2": "#0098c4",
+                    "mainSeriesProperties.areaStyle.linecolor": "#0cbef3",
+                    "mainSeriesProperties.areaStyle.linestyle": 0,
+                    "mainSeriesProperties.areaStyle.linewidth": 1,
+                    "mainSeriesProperties.areaStyle.priceSource": "close",
+                    "mainSeriesProperties.areaStyle.transparency": 80
+                },
+                custom_css_url: 'chart.css'
+            });
+            chart.onChartReady(function () {
+                const btnList = [
+                    {
+                        label: 'Line',
+                        resolution: "1",
+                        class: label == 'Line' ? 'selected' : '',
+                    },
+                    {
+                        label: '1min',
+                        resolution: "1",
+                        class: label == '1min' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '5min' : '5min',
+                        resolution: "5",
+                        class: timers == '5' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '15min' : '15min',
+                        resolution: "15",
+                        class: timers == '15' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '30min' : '30min',
+                        resolution: "30",
+                        class: timers == '30' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '60min' : '60min',
+                        resolution: "60",
+                        class: timers == '60' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '4H' : '4hour',
+                        resolution: "240",
+                        class: timers == '240' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '1day' : '1day',
+                        resolution: "1D",
+                        class: timers == '1D' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '1week' : '1week',
+                        resolution: "1W",
+                        class: timers == '1W' ? 'selected' : '',
+                    },
+                    {
+                        label: local == "en" ? '1month' : '1mon',
+                        resolution: "1M",
+                        class: timers == '1M' ? 'selected' : '',
+                    }
+                ];
+                window.BTNLIST = []
+                btnList.forEach(function (item) {
+                    let button = chart.createButton({
+                        align: "left"
+                    });
+                    window.BTNLIST.push(button)
+                    item.resolution === chart._options.interval && updateSelectedIntervalButton(button);
+                    button.attr('class', "button " + item.class).attr("data-chart-type", item.chartType === undefined ? 8 : item.chartType).on('click', function (e) {
+                        let chartType = +button.attr("data-chart-type");
+                        
+                            chart.chart().setResolution(item.resolution);
+                            
+                            window.location.href = 'http://121.36.215.181:10002/web/static/index.html?code=' + CodeName + '&timers=' + item.resolution + "&last_price=" + last_price+"&label="+item.label;
+                            //  window.location.href = '/static/index.html?code=' + CodeName + '&timers=' + item.resolution + "&last_price=" + last_price + "&label=" + item.label;
+                        
+                        if (chart.chart().chartType() !== chartType) {
+                            chart.chart().setChartType(chartType);
+                        }
+                        updateSelectedIntervalButton(button);
+                        
+                    }).append(item.label);
+                });
+                // widget.chart().createStudy('Moving Average', false, true, [5, "close", 0], null, {'Plot.color': "#7D53A8"});
+                // widget.chart().createStudy('Moving Average', false, true, [10, "close", 0], null, {'Plot.color': "#7699C2"});
+                // widget.chart().createStudy('Moving Average', false, true, [30, "close", 0], null, {'Plot.color': "#A0D75B"});
+                function updateSelectedIntervalButton(button) {
+                    chart.selectedIntervalButton && chart.selectedIntervalButton.removeClass("selected");
+                    button.addClass("selected");
+                    chart.selectedIntervalButton = button;
+                }
+
+                if (timers == 1 && label != '1min') {
+                    
+                    window.BTNLIST[0].addClass('selected')   
+                    chart.chart().setChartType(3);
+                } else {
+                    chart.chart().setChartType(1);
+                    chart.chart().createStudy('Moving Average', false, false, [5, 'close', 0], null, { 'Plot.color': 'green','Plot.linewidth': 2});
+                    chart.chart().createStudy('Moving Average', false, false, [10, 'close', 0], null, { 'Plot.color': 'red','Plot.linewidth':2});
+                    chart.chart().createStudy('Moving Average', false, false, [30, 'close', 0], null, { 'Plot.color': '#409EFF','Plot.linewidth':2})
+                }
+                // chart.chart().onIntervalChanged().subscribe(null, function(interval, obj) {
+                //     window.location.href='https://www.coinwave.net/web/static/index.html?code=' + CodeName + '&timers=' + item.resolution + "&last_price=" + last_price+"&label="+item.label;
+                // });
+                
+                // chart.chart().createStudy('MACD', false, false)
+            })
+        });
+        function getChartData(url) {
+            $.ajax({
+                url: url,
+                method: 'GET',
+                dataType: 'json',
+                async: true,
+                success: function (response) {
+                    if (response.status_code == 200) {
+                        bars = [];
+                        for (var i = 0; i < response.data.length; i++) {
+                            if (timers == '1D') {
+                                bars.unshift({ 
+                                    close: Number(response.data[i].close),
+                                    open: Number(response.data[i].open),
+                                    high: Number(response.data[i].high),
+                                    low: Number(response.data[i].low),
+                                    volume: Number(response.data[i].volume),
+                                    time: (Number(response.data[i].timestamp) + 8 * 3600) * 1000,
+                                })
+                            } else {
+                                bars.unshift({
+                                    close: Number(response.data[i].close),
+                                    open: Number(response.data[i].open),
+                                    high: Number(response.data[i].high),
+                                    low: Number(response.data[i].low),
+                                    volume: Number(response.data[i].volume),
+                                    time: Number(response.data[i].timestamp) * 1000,
+                                })
+                            }
+                        }
+                        status = 0;
+                    }
+                }
+            })
+        }
+        function createFeed() {
+            let Datafeed = {};
+            Datafeed.DataPulseUpdater = function (datafeed, updateFrequency) {
+                this._datafeed = datafeed;
+                this._subscribers = {};
+                this._requestsPending = 0;
+                var that = this;
+                var update = function () {
+                    if (that._requestsPending > 0) {
+                        return;
+                    }
+
+                    for (var listenerGUID in that._subscribers) {
+                        var subscriptionRecord = that._subscribers[listenerGUID];
+                        var resolution = subscriptionRecord.resolution;
+
+                        var datesRangeRight = parseInt((new Date().valueOf()) / 1000);
+
+                        //  BEWARE: please note we really need 2 bars, not the only last one
+                        //  see the explanation below. `10` is the `large enough` value to work around holidays
+                        var datesRangeLeft = datesRangeRight - that.periodLengthSeconds(resolution, 10);
+
+                        that._requestsPending++;
+
+                        (function (_subscriptionRecord) { // eslint-disable-line
+                            that._datafeed.getBars(_subscriptionRecord.symbolInfo, resolution, datesRangeLeft, datesRangeRight, function (bars) {
+                                that._requestsPending--;
+
+                                //  means the subscription was cancelled while waiting for data
+                                if (!that._subscribers.hasOwnProperty(listenerGUID)) {
+                                    return;
+                                }
+
+                                if (bars.length === 0) {
+                                    return;
+                                }
+
+                                var lastBar = bars[bars.length - 1];
+                                if (!isNaN(_subscriptionRecord.lastBarTime) && lastBar.time < _subscriptionRecord.lastBarTime) {
+                                    return;
+                                }
+
+                                var subscribers = _subscriptionRecord.listeners;
+
+                                //  BEWARE: this one isn't working when first update comes and this update makes a new bar. In this case
+                                //  _subscriptionRecord.lastBarTime = NaN
+                                var isNewBar = !isNaN(_subscriptionRecord.lastBarTime) && lastBar.time > _subscriptionRecord.lastBarTime;
+
+                                //  Pulse updating may miss some trades data (ie, if pulse period = 10 secods and new bar is started 5 seconds later after the last update, the
+                                //  old bar's last 5 seconds trades will be lost). Thus, at fist we should broadcast old bar updates when it's ready.
+                                if (isNewBar) {
+                                    if (bars.length < 2) {
+                                        throw new Error('Not enough bars in history for proper pulse update. Need at least 2.');
+                                    }
+
+                                    var previousBar = bars[bars.length - 2];
+                                    for (var i = 0; i < subscribers.length; ++i) {
+                                        subscribers[i](previousBar);
+                                    }
+                                }
+
+                                _subscriptionRecord.lastBarTime = lastBar.time;
+
+                                for (var i = 0; i < subscribers.length; ++i) {
+                                    subscribers[i](lastBar);
+                                }
+                            },
+
+                                //  on error
+                                function () {
+                                    that._requestsPending--;
+                                });
+                        })(subscriptionRecord);
+                    }
+                };
+
+                if (typeof updateFrequency != 'undefined' && updateFrequency > 0) {
+                    setInterval(update, updateFrequency);
+                }
+            };
+            Datafeed.DataPulseUpdater.prototype.periodLengthSeconds = function (resolution, requiredPeriodsCount) {
+                var daysCount = 0;
+                if (resolution === 'D') {
+                    daysCount = requiredPeriodsCount;
+                } else if (resolution === 'M') {
+                    daysCount = 31 * requiredPeriodsCount;
+                } else if (resolution === 'W') {
+                    daysCount = 7 * requiredPeriodsCount;
+                } else {
+                    daysCount = requiredPeriodsCount * resolution / (24 * 60);
+                }
+
+                return daysCount * 24 * 60 * 60;
+            };
+            Datafeed.DataPulseUpdater.prototype.subscribeDataListener = function (symbolInfo, resolution, newDataCallback, listenerGUID) {
+                this._datafeed._logMessage('Subscribing ' + listenerGUID);
+
+                if (!this._subscribers.hasOwnProperty(listenerGUID)) {
+                    this._subscribers[listenerGUID] = {
+                        symbolInfo: symbolInfo,
+                        resolution: resolution,
+                        lastBarTime: NaN,
+                        listeners: []
+                    };
+                }
+
+                this._subscribers[listenerGUID].listeners.push(newDataCallback);
+            };
+
+            Datafeed.DataPulseUpdater.prototype.unsubscribeDataListener = function (listenerGUID) {
+                this._datafeed._logMessage('Unsubscribing ' + listenerGUID);
+                delete this._subscribers[listenerGUID];
+            };
+
+            Datafeed.Container = function (updateFrequency) {
+                this._configuration = {
+                    supports_search: false,
+                    supports_group_request: false,
+                    supported_resolutions: ['1', '5', '30', '60', '4H', '1D'],
+                    supports_marks: true,
+                    supports_timescale_marks: true,
+                    exchanges: ['myExchange'],
+                    minmov: 1,
+                    pricecale: 10000,
+                };
+
+                this._barsPulseUpdater = new Datafeed.DataPulseUpdater(this, updateFrequency || 10 * 1000);
+                // this._quotesPulseUpdater = new Datafeed.QuotesPulseUpdater(this);
+
+                this._enableLogging = true;
+                this._callbacks = {};
+
+                this._initializationFinished = true;
+                this._fireEvent('initialized');
+                this._fireEvent('configuration_ready');
+            };
+
+            Datafeed.Container.prototype._fireEvent = function (event, argument) {
+                if (this._callbacks.hasOwnProperty(event)) {
+                    var callbacksChain = this._callbacks[event];
+                    for (var i = 0; i < callbacksChain.length; ++i) {
+                        callbacksChain[i](argument);
+                    }
+
+                    this._callbacks[event] = [];
+                }
+            };
+
+            Datafeed.Container.prototype._logMessage = function (message) {
+                if (this._enableLogging) {
+                    var now = new Date();
+                    // console.log("CHART LOGS: "+now.toLocaleTimeString() + '.' + now.getMilliseconds() + '> ' + message);
+                }
+            };
+
+            Datafeed.Container.prototype.on = function (event, callback) {
+                if (!this._callbacks.hasOwnProperty(event)) {
+                    this._callbacks[event] = [];
+                }
+
+                this._callbacks[event].push(callback);
+                return this;
+            };
+
+            Datafeed.Container.prototype.onReady = function (callback) {
+                let that = this;
+                if (this._configuration) {
+                    setTimeout(function () {
+                        callback(that._configuration);
+                    }, 0);
+                }
+                else {
+                    this.on('configuration_ready', function () {
+                        callback(that._configuration);
+                    });
+                }
+            };
+            // 修改实时价格小数位
+            function adjustScaleNew(num){
+                var len = 4
+                var _num = Number(num).toFixed(len+1);
+                // console.log(_num.substr(0, _num.length-1))
+                return _num.substr(0, _num.length-1)
+            }
+            Datafeed.Container.prototype.resolveSymbol = function (symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
+                this._logMessage("GOWNO :: resolve symbol " + symbolName);
+                Promise.resolve().then(() => {
+                //     function adjustScale(){
+                //     if(last_price.split('.')[1]){
+                //         let len=last_price.split('.')[1].length;
+                //         switch (len) {
+                //             case 1:
+                //                 return 10;
+                //                 break;
+                //             case 2:
+                //                 return 100;
+                //                 break;
+                //             case 3:
+                //                 return 1000;
+                //                 break;
+                //             case 4:
+                //                 return 10000;
+                //                 break;
+                //             case 5:
+                //                 return 100000;
+                //                 break;
+                //             case 6:
+                //                 return 1000000;
+                //                 break;
+                //             case 7:
+                //                 return 10000000;
+                //                 break;
+                //             case 8:
+                //                 return 100000000;
+                //                 break;
+                //             default:
+                //                 // statements_def
+                //                 break;
+                //         }
+                //     }else{
+                //         return 100;
+                //     }
+                // }
+                    this._logMessage("GOWNO :: onResultReady inject " + currency1 + ":" + currency2);
+                    onSymbolResolvedCallback({
+                        "name": currency1 + ":" + currency2,
+                        "timezone": "Asia/shanghai",
+                        "pricescale": 10000,
+                        "minmov": 1,
+                        "minmov2": 0,
+                        "ticker": currency1 + ":" + currency2,
+                        "description": "",
+                        "session": "24x7",
+                        "type": "bitcoin",
+                        "exchange-traded": "myExchange",
+                        "exchange-listed": "myExchange",
+                        "has_intraday": true,
+                        "intraday_multipliers": ['1', '5', '4H', '30', '60', '1D','1W','1Y'], //It is an array containing intraday resolutions (in minutes) the datafeed wants to build by itself. E.g., if the datafeed reported he supports resolutions ["1", "5", "15"], but in fact it has only 1 minute bars for symbol X, it should set intraday_multipliers of X = [1]. This will make Charting Library to build 5 and 15 resolutions by itself.
+                        "has_weekly_and_monthly": false,
+                        "has_no_volume": true,
+                        "regular_session": "24x7"
+                    });
+                    // chart.chart().createStudy("MACD", false, true, [12, 26, "close", 9]);
+                })
+            };
+            Datafeed.Container.prototype.getBars = function (symbolInfo, resolution, rangeStartDate, rangeEndDate, onDataCallback, onErrorCallback) {
+                if (rangeStartDate > 0 && (rangeStartDate + '').length > 10) {
+                    throw new Error(['Got a JS time instead of Unix one.', rangeStartDate, rangeEndDate]);
+                }
+                onDataCallback([], { noData: true });
+                //onDataCallback(bars, { noData: true , nextTime: data.nb || data.nextTime });
+            };
+            Datafeed.Container.prototype.subscribeBars = function (symbolInfo, resolution, onRealtimeCallback, listenerGUID, onResetCacheNeededCallback) {
+                var _this = this;
+                timer_kline = setInterval(function () {
+                    if (status == '0') {
+                        loading.style.display = "none";
+                        _this.on('pair_change', function () {
+                            onResetCacheNeededCallback();
+                        });
+                        onResetCacheNeededCallback();
+                        // chart.activeChart().resetData();
+                        if (pushtimer) {
+                            clearInterval(pushtimer);
+                        }
+                        switch (resolution) {
+                            case '1':
+                                timer = 18000;
+                                break;
+                            case '5':
+                                timer = 180000;
+                                break;
+                            case '15':
+                               timer=480000;
+                                break;
+                            // case '4H':
+                            //     timer = 480000;
+                            //     break;
+                            case '30':
+                                timer = 900000;
+                                break;
+                            case '60':
+                                timer = 1800000;
+                                break;
+                            case '1D':
+                                break;
+                        }
+                        clearInterval(timer_kline);
+                        bars.forEach(function (bar) { // in subscribeBars
+                            onRealtimeCallback(bar)
+                        });
+                        setTimeout(function () {
+                            let timer = null
+                            // 首先判断是否 支持 WebSocket
+
+                            if ('WebSocket' in window) {
+                                MainData = new WebSocket(wsurl);
+                            } else if ('MozWebSocket' in window) {
+                                MainData = new MozWebSocket(wsurl);
+                            } else {
+                                MainData = new SockJS(wsurl);
+                            };
+                            // 打开时
+                            MainData.onopen = function (evnt) {
+                                var msg = {
+                                    sub: 'ticker@' + CodeName
+                                };
+                                MainData.send(JSON.stringify(msg)); // 发送消息
+                                timer = setInterval(function () {
+                                    MainData.send(JSON.stringify('123')); // 发送消息
+                                }, 10000);
+                            };
+                            // 处理消息时
+                            MainData.onmessage = function (evnt) {
+                                // 监听页面变化，清除定时器，关掉推送
+                                window.onunload = function(){
+                                    clearInterval(timer)
+                                    this.MainData.close()
+                                }
+                                var datanum = JSON.parse(evnt.data);
+                                // console.log(datanum)
+                                if (datanum.code == CodeName) {
+                                    let newdata = {
+                                            // close: Number(datanum.price),
+                                            // open: bars[bars.length-1].open,
+                                            // high: bars[bars.length-1].high,
+                                            // low: bars[bars.length-1].low,
+                                            // volume: bars[bars.length-1].volume,
+                                            // time: bars[bars.length-1].time,
+                                            close: Number(datanum.price),
+                                            open: bars[bars.length-1].open,
+                                            high: bars[bars.length-1].high,
+                                            low: bars[bars.length-1].low,
+                                            volume: bars[bars.length-1].volume,
+                                            time: bars[bars.length-1].time,
+                                  
+                                    }
+                                    onRealtimeCallback(newdata);
+                                }
+                            };
+                            MainData.onerror = function (evnt) {
+                                console.log("  websocket.onerror");
+                                MainData.onopen();
+                            };
+                            MainData.onclose = function (evnt) {
+                                console.log("  websocket.onclose");
+                            };
+                        }, 800)
+                        if (resolution != '1D') {
+                            pushtimer = setInterval(function () {
+                                switch (resolution) {
+                                    case '1':
+                                        getChartData(dataurl + 'minute&code=' + CodeName);
+                                        break;
+                                    case '5':
+                                        getChartData(dataurl + 'minute5&code=' + CodeName);
+                                        break;
+                                    case '15':
+                                       getChartData(dataurl+'minute15&code='+CodeName);
+                                        break;                                    // case '4H':
+                                    //     getChartData(dataurl + 'minute240&code=' + CodeName);
+                                    //     break;
+                                    case '30':
+                                        getChartData(dataurl + 'minute30&code=' + CodeName);
+                                        break;
+                                    case '60':
+                                        getChartData(dataurl + 'minute60&code=' + CodeName);
+                                        break;
+                                }
+                            }, timer)
+                        }
+                    }
+                }, 200)
+
+
+                //this._barsPulseUpdater.subscribeDataListener(symbolInfo, resolution, onRealtimeCallback, listenerGUID, onResetCacheNeededCallback);
+            };
+            Datafeed.Container.prototype.unsubscribeBars = function (listenerGUID) {
+                this._barsPulseUpdater.unsubscribeDataListener(listenerGUID);
+            };
+
+            return new Datafeed.Container;
+        }
+        function adjustChart() {
+            let chart_iframe = $("#chart_container").find("iframe");
+            let chart_top = chart_iframe.contents().find(".header-chart-panel");
+            let chart_top_container = chart_iframe.contents().find(".header-chart-panel-content");
+            let chart_bottom = chart_iframe.contents().find(".date-range-wrapper");
+            chart_bottom.appendTo(chart_top_container);
+        }
+        function getCookie(name) { //读取cookie
+            var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+            if (arr = document.cookie.match(reg))
+                return unescape(arr[2]);
+            else
+                return null;
+        }
+    </script>
+</body>
+
+</html>

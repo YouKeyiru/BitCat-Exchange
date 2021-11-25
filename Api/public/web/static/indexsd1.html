@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <link rel="icon" href="https://static.jianshukeji.com/hcode/images/favicon.ico">
+    <style>
+        #container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #loading {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            left: 50%;
+            margin-left: -100px;
+            top: 50%;
+            margin-top: -100px;
+            z-index: 99999999;
+            background: url('./img/timg.839fddf.gif') center center no-repeat;
+            background-size: 30% 30%;
+            display: none;
+        }
+    </style>
+    <script src="./lib/jquery.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/oldie.js"></script>
+    <script src="./zhuti.js"></script>
+
+</head>
+
+<body style="margin: 0;padding:0;height: 545px;">
+    <div id="container"></div>
+    <span id="loading"></span>
+    <script>
+        // 检查cookie
+        function get_cookie(Name) {
+    var search = Name + "="//查询检索的值
+    var returnvalue = "";//返回值
+    var timerws = null;
+    if (document.cookie.length > 0) {
+        sd = document.cookie.indexOf(search);
+        if (sd!= -1) {
+            sd += search.length;
+            end = document.cookie.indexOf(";", sd);
+            if (end == -1)
+            end = document.cookie.length;
+            //unescape() 函数可对通过 escape() 编码的字符串进行解码。
+            returnvalue=unescape(document.cookie.substring(sd, end))
+        }
+    } 
+    return returnvalue;
+    }
+
+
+
+
+        var currency1 = 'USDT', currency2 = 'BTC', saved_chart = null, chart = null, feed = null, timer = 30000, pushtimer = null, last_price = null, bars = [], chart = null, MainData = null, CodeName = '', timers = null, status = 1, timer_kline = null, asks = [], bids = [];
+        var loading = document.getElementById('loading');
+        var dataurl = "http://121.36.215.181:10002/api/contract/pct?type=depth&pageSize=1000&page=1&code="+GetQueryString('code');
+        var wsurl = "ws://121.36.215.181:10002/ws";
+    
+        var _bgColor = {                
+                mainBg: '#0B0A0B', //主要背景颜色
+                asideBg: '#fff', //工具边框颜色
+                hengline: '#eee', //横线
+                shuline: '#eee', //竖线
+                backgroundColor:'#fff',
+                foregroundColor:'#fff',     
+            }
+        function GetQueryString(name) { //截取url
+            var reg = new RegExp("(^|&|)" + name + "=([^&?]*)(&|$|)", "i");
+            var r = window.location.search.substr(1).match(reg);  //获取url中"?"符后的字符串并正则匹配
+            var context = "";
+            if (r != null)
+                context = r[2];
+            reg = null;
+            r = null;
+            return context == null || context == "" || context == "undefined" ? "" : context;
+        };
+        CodeName = GetQueryString('code');
+        timers = GetQueryString('timers');
+        // console.log(CodeName,timers)
+        // CodeName = "ltc_usdt";
+        // timers = '30';
+        
+        last_price = GetQueryString('last_price');
+        // if (timers == '4h') {
+        //     getChartData(dataurl + 'minute240&code=' + CodeName);
+        // }
+        // if (timers == '1') {
+        //     getChartData(dataurl + 'minute&code=' + CodeName);
+        // } if (timers != '1' && timers != '1D' && timers != '4h') {
+        //     getChartData(dataurl + 'minute' + timers + '&code=' + CodeName);
+        // } if (timers == '1D') {
+        //     getChartData(dataurl + 'day&code=' + CodeName);
+        // }
+        var _this = this;
+         // 首先判断是否 支持 WebSocket
+
+        if ('WebSocket' in window) {
+            MainData = new WebSocket(wsurl);
+        } else if ('MozWebSocket' in window) {
+            MainData = new MozWebSocket(wsurl);
+        } else {
+            MainData = new SockJS(wsurl);
+        };
+        // let timer = null
+        // 打开时
+        getData();    //根据情况，直接取推送数据，添加处有：131行 176行，注释行：232行
+        MainData.onopen = function (evnt) {
+            var msg = {
+                sub: 'pct@' + CodeName,
+            };
+            MainData.send(JSON.stringify(msg)); // 发送消息
+            timer = setInterval(function () {
+                MainData.send(JSON.stringify('123')); // 发送消息
+            }, 10000);
+        };
+        // 处理消息时
+        MainData.onmessage = function (evnt) {
+            window.onunload = function(){
+                clearInterval(timer)
+                this.MainData.close()
+            }
+            var datanum = JSON.parse(evnt.data);
+            // console.log(datanum)
+            // asks = [];//卖出
+            // bids = [];//买入
+            // for (var i = 0; i < datanum.asks.length; i++) {
+            //     asks[i]=[];
+            //     asks[i].push(datanum.asks[i].price);
+            //     asks[i].push(datanum.asks[i].totalSize);
+            // }
+            
+            // for (var i = 0; i < datanum.bids.length; i++) {
+            //     bids[i]=[];
+            //     bids[i].push(datanum.bids[i].price);
+            //     bids[i].push(datanum.bids[i].totalSize);
+            // };
+            // // console.log(chart.series[0].data);
+            // asks.sort(function (val1,val2){
+            //     return val1[0] -val2[0];
+            //     }
+            // )
+            // bids.sort(function (val1,val2){
+            //     return val1[0] - val2[0];
+            //     }
+            // )
+            // chart.series[0].data = bids;
+            // chart.series[1].data = asks;
+            // loading.style.display = "none";
+            // getData();
+            
+            // chart.hideLoading(); 
+            asks = [];//卖出
+            bids = [];//买入
+            askstotalSize = 0;
+            bidstotalSize = 0;
+            for (var i = 0; i < datanum.data.asks.length; i++) {
+                asks[i]=[];
+                asks[i].push(datanum.data.asks[i].price*1);
+                askstotalSize = askstotalSize + datanum.data.asks[i].totalSize*1;
+                
+                asks[i].push(askstotalSize);
+                
+            }
+            for (var i = 0; i < datanum.data.bids.length; i++) {
+                bids[i]=[];
+                bids[i].push(datanum.data.bids[i].price*1);
+                bidstotalSize = bidstotalSize + datanum.data.bids[i].totalSize*1;
+                bids[i].push(bidstotalSize);
+            }
+            asks.sort(function (val1,val2){
+                return val1[0] - val2[0];
+                }
+            )
+            bids.sort(function (val1,val2){
+                return val1[0] - val2[0];
+                }
+            );
+            getData();
+            status = 0;
+        };
+        // console.log(chart.series)
+        MainData.onerror = function (evnt) {
+            console.log("  websocket.onerror");
+            MainData.onopen();
+        };
+        MainData.onclose = function (evnt) {
+            console.log("  websocket.onclose");
+        };
+        // getChartData(dataurl + 'minute&code=' + CodeName);
+        
+        getChartData(dataurl);
+        function getChartData(url) {
+            loading.style.display = 'block';
+            $.ajax({
+                url: url,
+                method: 'GET',
+                dataType: 'json',
+                async: true,
+                success: function (response) {
+                    if (response.status_code == 200 &&response.data.asks&&response.data.asks.length>0) {
+                        asks = [];//卖出
+                        bids = [];//买入
+                        askstotalSize = 0;
+                        bidstotalSize = 0;
+                        for (var i = 0; i < response.data.asks.length; i++) {
+                            asks[i]=[];
+                            asks[i].push(response.data.asks[i].price*1);
+                            // asks[i].push(response.data[0].asks[i].totalSize*1);
+                            askstotalSize = askstotalSize + response.data.asks[i].totalSize*1;
+                            
+                            asks[i].push(askstotalSize);
+                            
+                        }
+                        for (var i = 0; i < response.data.bids.length; i++) {
+                            bids[i]=[];
+                            bids[i].push(response.data.bids[i].price*1);
+                            bidstotalSize = bidstotalSize + response.data.bids[i].totalSize*1;
+                            bids[i].push(bidstotalSize);
+                        }
+                        asks.sort(function (val1,val2){
+                            return val1[0] - val2[0];
+                            }
+                        )
+                        bids.sort(function (val1,val2){
+                            return val1[0] - val2[0];
+                            }
+                        );
+                        getData();
+                        status = 0;
+                    }
+                }
+            })
+        };
+        function getData() {
+            // var night = get_cookie("changeBg") == 'night' || !get_cookie("changeBg");
+            var night = true;
+            var language = get_cookie("language");
+            var title_text = "市场深度图";
+            var tooltip_text = "委托价";
+            var series_text = "累计";
+            switch (language) {
+                case "English": 
+                    title_text = "Market depth map";
+                    tooltip_text = "Commission price";
+                    series_text = "Grand total";
+                    break;
+                default:
+                    title_text = "市场深度图";
+                    tooltip_text = "委托价";
+                    series_text = "累计";
+                    break;
+            }
+
+ 
+            chart = Highcharts.chart('container', {
+                chart: {
+                    type: 'area',
+                    zoomType: 'xy',
+                    backgroundColor: night?"#282829":"#ffffff",
+                    plotBackgroundColor: night?"#181b2a":"",
+                    plotBorderColor: "red",
+                },
+                loading_screen: {
+                    backgroundColor: _bgColor.backgroundColor,
+                    foregroundColor: _bgColor.foregroundColor,
+                },
+                title: {
+                    text:  title_text,
+                    style:{
+                        color: night?"#ffffff":"181b2a"
+                    }
+                },
+                xAxis: {
+                    gridLineColor:night?"#4a4a4a":"#d8d1d1",
+
+                    minPadding: 0,
+                    maxPadding: 0,
+                    gridLineWidth: 1,//x轴水平线
+                },
+                yAxis: [{
+                    gridLineColor:night?"#4a4a4a":"#d8d1d1",
+
+                    lineWidth: 1,
+                    gridLineWidth: 1,//y轴水平线
+                    title: null,
+                    tickWidth: 1,
+                    tickLength: 5,
+                    tickPosition: 'outside',
+                    labels: {
+                        align: 'left',
+                        x: 8,
+                        position: 'outside'
+                    }
+                }, {
+                    opposite: true,
+                    linkedTo: 0,
+                    lineWidth: 1,
+                    gridLineWidth: 0,//y轴水平线
+                    title: null,
+                    tickWidth: 1,
+                    tickLength: 5,
+                    tickPosition: 'outside',
+                    labels: {
+                        align: 'right',
+                        x: -8,
+                        position: 'outside'
+                    }
+                }],
+                credits: {
+                    enabled: false     //不显示LOGO 
+                },
+                legend: {
+                    enabled: false
+                },
+                plotOptions: {
+                    area: {
+                        fillOpacity: 0.5,
+                        lineWidth: 1,
+                        step: 'center'
+                    }
+                },
+                tooltip: {
+                    headerFormat: `<span style="font-size=10px;">${tooltip_text}: {point.key}</span><br/>`,
+                    valueDecimals: 2
+                },
+                series: [{
+                    name: series_text,
+                    data: bids,
+                    color: 'rgba(83,142,122,.3)'
+                }, {
+                    name:  series_text,
+                    data: asks,
+                    color: 'rgba(173,111,111,0.3)'
+                }]
+            });
+        };
+        function getCookie(name) { //读取cookie
+            var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+            if (arr = document.cookie.match(reg))
+                return unescape(arr[2]);
+            else
+                return null;
+        }
+
+    </script>
+</body>
+
+</html>

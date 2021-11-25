@@ -1,0 +1,34 @@
+{
+    "name": "zhusaidong/laravel-admin-grid-exporter",
+    "description": "laravel-admin grid-exporter",
+    "type": "library",
+    "keywords": ["laravel-admin", "extension", "grid-exporter"],
+    "homepage": "https://github.com/zhusaidong/laravel-admin-grid-exporter",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "zhusaidong",
+            "email": "zhusaidong@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0",
+        "maatwebsite/excel": "^3.0",
+        "encore/laravel-admin": "~1.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zhusaidong\\GridExporter\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zhusaidong\\GridExporter\\GridExporterServiceProvider"
+            ]
+        }
+    }
+}

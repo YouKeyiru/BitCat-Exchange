@@ -1,0 +1,53 @@
+<?php
+
+return [
+    'input_post_type'       => '请选择订单类型',
+    'input_post_type_error' => '请选择正确的类型',
+    'input_min_price'       => '请输入交易最小限额',
+    'input_total_num'       => '请输入交易数量',
+    'total_num_gt_0'        => '交易数量需大于0',
+    'input_total_price'     => '请输入交易金额',
+    'total_price_gt_0'      => '交易金额需大于0',
+    'min_price_gt_0'        => '交易最小限额需大于0',
+    'input_max_price'       => '请输入交易最大限额',
+    'max_gt_min '           => '最大限额需大于最小限额',
+    'input_trans_num'       => '请输入交易数量',
+    'trans_num_gt_0'        => '交易数量需大于0',
+    'input_price'           => '请输入交易单价',
+    'input_wid_not_allow'   => '输入币种暂未开放交易',
+    'has_contract_orders'   => '存在未完成的合约交易订单',
+    'input_order_no'        => '请输入订单号',
+    'input_pay_method'      => '请选择付款方式',
+    'input_payment_type'    => '请选择收款方式类型',
+    'input_auth_name'       => '请输入姓名',
+    'input_bank'            => '请输入开户行',
+    'input_branch'          => '请输入开户支行',
+    'input_card_num'        => '请输入号码',
+    'input_act'             => '请选择操作类型',
+    'input_qrcode'          => '请上传二维码',
+    'order_not_found'       => '订单不存在，请刷新列表',
+    'update_failed'         => '更新失败',
+    'no_appeal'             => '无权申诉该订单',
+    'not_add_payment'       => '未添加:payment支付方式',
+    'please_add_payment'    => '请先添加支付方式',
+    'param_not_all'         => '参数不完整',
+    'cannot_operate_own_order' => '不能操作自己订单',
+    'amount_not_enough'        => '数量不足',
+    'shop_examine_ing' => '申请商家请求审核中',
+    'no_shop'          => '您暂未成为商家',
+    'yes_shop'          => '您已成为商家',
+    'cancel_shop_ing'            => '撤销申请处理中，请等待审核',
+    'cancel_shop_over'           => '您已撤销商家',
+    'have_order_not_cancel_shop' => '您还有订单未完成,撤销或完成后才能取消商家身份！',
+    'have_order_not_trans' => '还有交易未完成，请先完成交易',
+
+
+    'back_fee_failed' => '返还手续费失败',
+    'dec_cj_failed' => '减成交数量失败',
+
+    'dec_cj_fee_failed' => '成交手续费扣除失败',
+    'inc_sy_amount_failed' => '剩余数量增加失败',
+    'inc_cj_amount_failed' => '成交数量增加失败',
+
+
+];
