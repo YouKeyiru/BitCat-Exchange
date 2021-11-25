@@ -1,4 +1,4 @@
-###API
+### API
 ```
 cp .env.example .env <br/>
 composer install <br/>
@@ -8,7 +8,8 @@ php artisan key:generate <br/>
 php artisan jwt:secret <br/>
 ```
 
-###Init
+### Admin
+### Init
 ```
 cp .env.example .env
 composer install
