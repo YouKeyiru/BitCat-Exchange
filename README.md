@@ -37,6 +37,5 @@ php artisan iseed products_exchange
 php artisan iseed wallet_code
 ```
 
-QQ:58787244 <br/>
 Telegram:@youkeyi
 
