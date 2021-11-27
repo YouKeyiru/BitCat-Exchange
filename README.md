@@ -1,43 +1,15 @@
-### API
-```
-cp .env.example .env
-composer install 
-php artisan storage:link 
-chmod -R 755 storage/ 
-php artisan key:generate
-php artisan jwt:secret 
-```
+# BitCat  交易所
+#### PC:www.youkey.cc
+###### 测试账号：13888888888
+###### 密码：aa123456
 
-### Admin
-### Init
-```
-cp .env.example .env
-composer install
-php artisan vendor:publish --provider="Encore\Admin\AdminServiceProvider"
-php artisan vendor:publish --tag=laravel-admin-grid-lightbox
-php artisan vendor:publish --tag=laravel-admin-wangEditor
-
-
-php artisan key:generate
-
-
-php artisan migrate --path database\migrations\
-php artisan db:seed
-```
-
-
-
-
-### Back
-```
-php artisan migration:generate
-php artisan admin:export-seed --users
-php artisan iseed products_contract
-php artisan iseed products_exchange
-php artisan iseed wallet_code
-```
+### 【双端原生开发APP、另有PC端+H5端】
+### （性能稳定、功能细节多、非常适合运营，内核经过了客户的锤炼和打磨）
 
 ### Telegram:@youkeyi
 ### Telegram:@youkeyi
 ### Telegram:@youkeyi
+
+
+
 
