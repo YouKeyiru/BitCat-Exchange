@@ -3,14 +3,38 @@
 #####  系统带有插针功能，可添加多个交易对
 #####  性能稳定、功能细节多、非常适合运营，内核经过了客户的锤炼和打磨
 
-#### PC:youkey.cc
-#### 安卓:youkey.cc/BitCat.apk
+#### PC:https://www.youkey.cc/
+#### 安卓:https://www.youkey.cc/BitCat.apk
 ###### 测试账号：13888888887
 ###### 密码：aa123456
+![image](https://user-images.githubusercontent.com/88319602/182165661-f6b094f9-3e38-4a18-92ab-60b7f8237a13.png)
+![image](https://user-images.githubusercontent.com/88319602/182165696-f808a4b8-5a69-48bc-90ea-13ca04309cc1.png)
+![image](https://user-images.githubusercontent.com/88319602/182165716-058e7c7e-1f2e-4889-95ac-452a6467cde9.png)
+![image](https://user-images.githubusercontent.com/88319602/182165738-a7916545-fb7f-4cb8-b557-c750f0050d58.png)
+![image](https://user-images.githubusercontent.com/88319602/182165758-b074cff1-7b16-4fed-8bb8-59b7433658cb.png)
+![image](https://user-images.githubusercontent.com/88319602/182165879-15a1ae86-0670-439c-89b2-940a8d6d5781.png)
+![image](https://user-images.githubusercontent.com/88319602/182165995-bc0f6d19-a6d9-4fa6-a329-e326ba6f3997.png)
+![image](https://user-images.githubusercontent.com/88319602/182166221-ab086b50-f44d-4863-bfe1-e0829fc0a1c5.png)
+
+
+# Coinstake交易所 完美运营交易所 多语言
+### 【前端uniapp可打包双端APP以及H5 带PC端+代理独立后台 后端PHP+Larevel】
+### 系统稳定+币币+合约+期权+自选币+申购+后台设置自选币K线+带合约控制+期权控制
+H5：https://mobile.uur0.com/#/
 
 ###### 后台请联系管理人员获取
 ###### 可接定制开发
 
+![image](https://user-images.githubusercontent.com/88319602/182164017-03e7fb53-3f0d-4758-a6a5-8d574ebf95ed.png)
+![image](https://user-images.githubusercontent.com/88319602/182164242-875aa0a8-815d-4265-bcc1-ce1c310bcf0d.png)
+![image](https://user-images.githubusercontent.com/88319602/182164316-a429d15f-3c16-404c-897a-e3a688b3a303.png)
+![image](https://user-images.githubusercontent.com/88319602/182164369-02d0906e-4bf0-412e-87f0-f13b86b722e8.png)
+后台
+![image](https://user-images.githubusercontent.com/88319602/182164458-7012f870-ed59-43c7-8c96-84d44545fff0.png)
+![image](https://user-images.githubusercontent.com/88319602/182164514-08a72ec6-8dc0-4686-8b1c-f4f58eeabc01.png)
+![image](https://user-images.githubusercontent.com/88319602/182164564-968b93da-17ff-4fe2-9d79-7f03a4778c6f.png)
+![image](https://user-images.githubusercontent.com/88319602/182164936-0ec9b37f-3726-4f43-9ea6-786554930649.png)
+![image](https://user-images.githubusercontent.com/88319602/182165012-248892af-36d7-4c05-b8d5-b86bec03ae32.png)
 
 
 ### Telegram:@youkeyi
